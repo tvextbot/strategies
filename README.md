@@ -1,1 +1,1 @@
-# strategies
+# TVExtBot 전략
