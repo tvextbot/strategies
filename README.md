@@ -1,1 +1,1 @@
-# TVExtBot 전략
+# TVExtBot 전략 저장소
