@@ -1,0 +1,68 @@
+//@version=3
+//１日足に適用します。
+//−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
+// TradingViewコミニュティで公開されている
+// 『Bollinger Awesome Alert R1 by JustUncleL』というストラテジーを
+// 改良したアラートを通知するストラテジーです。
+//−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
+study(title="『SS3』Long Term Strategy", overlay=true)
+// パラメーターセット部
+// 適当にパラメーターを探って入れています。
+// 必要があれば最適なパラメーター値にチューニングしてください。
+// 結果に影響しないパラメーターもあります。
+// Bollinger Bands Inputs
+bb_use_ema = input(false, title="Use EMA for Bollinger Band")
+bb_length = input(9, minval=1, title="Bollinger Length")
+bb_source = input(close, title="Bollinger Source")
+bb_mult = input(3.0, title="Base Multiplier", minval=0.5, maxval=10)
+// EMA inputs
+fast_ma_len = input(6, title="Fast EMA length", minval=2)
+// Awesome Inputs
+nLengthSlow = input(41, minval=1, title="Awesome Length Slow")
+nLengthFast = input(15, minval=1, title="Awesome Length Fast")
+//チャネルブレイクアウト戦略を追加（１週間ごとに相場の上下を判定する。）
+length = input(title="Length", type=integer, minval=1, maxval=1000, defval=7)
+//　ロジック部
+bb_basis = bb_use_ema ? ema(bb_source, bb_length) : sma(bb_source, bb_length)
+fast_ma  = ema(bb_source, fast_ma_len)
+dev = stdev(bb_source, bb_length)
+bb_dev_inner = bb_mult * dev
+// Upper bands
+inner_high = bb_basis + bb_dev_inner
+// Lower Bands
+inner_low = bb_basis - bb_dev_inner
+// Calculate Awesome Oscillator
+xSMA1_hl2 = sma(hl2, nLengthFast)
+xSMA2_hl2 = sma(hl2, nLengthSlow)
+xSMA1_SMA2 = xSMA1_hl2 - xSMA2_hl2
+// Calculate direction of AO
+AO = xSMA1_SMA2>=0? xSMA1_SMA2 > xSMA1_SMA2[1] ? 1 : 2 : xSMA1_SMA2 > xSMA1_SMA2[1] ? -1 : -2
+// plot BB basis
+plot(bb_basis, title="Basis Line", color=red, transp=10, linewidth=2)
+// plot BB upper and lower bands
+ubi = plot(inner_high, title="Upper Band Inner", color=blue, transp=10, linewidth=1)
+lbi = plot(inner_low, title="Lower Band Inner", color=blue, transp=10, linewidth=1)
+// center BB channel fill
+fill(ubi, lbi, title="Center Channel Fill", color=silver, transp=90)
+// plot fast ma
+plot(fast_ma, title="Fast EMA", color=black, transp=10, linewidth=2)
+// Calc breakouts
+break_down =   crossunder(fast_ma, bb_basis) and close < bb_basis and abs(AO)==2
+break_up   =  crossover(fast_ma, bb_basis) and close > bb_basis and abs(AO)==1
+//チャネルブレイクアウト、時間足を変えたい時はここを変更します。
+// D：一日足、60：１時間足
+hprice = highest(security(tickerid, "D", high),length)
+lprice = lowest(security(tickerid, "D", low),length)
+if (cross(security(tickerid, "D", high),hprice) == true)
+    break_up := true
+if (cross(security(tickerid, "D", low),lprice) == true)
+    break_down := true
+if break_up and break_down
+    break_up := false
+    break_down := false
+
+// アラートシグナル表示
+plotshape(break_down, title="CB_Down Short", style=shape.arrowdown, location=location.abovebar, size=size.auto, text="Short", color=red, transp=0)
+plotshape(break_up, title="CB_Up Long", style=shape.arrowup, location=location.belowbar, size=size.auto, text="Long", color=green, transp=0)
+alertcondition(break_down, title="CB_Short Alert",message="Short")
+alertcondition(break_up,title="CB_Long Alert",message="Long")
