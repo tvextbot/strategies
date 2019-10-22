@@ -1,0 +1,79 @@
+// ##############################################################하이킨아시+일목균형 활용전략##############################################################
+// <매수진입>
+//   현재HA고가 > 이전HA고가(과거2개봉높은수치) and 종가 > 후행스팬 and 종가 > 일목윗구름대 and (전환선 >= 기준선 or 종가 > 기준선)
+// <매수청산>
+//   현재HA저가 < 이전HA저가(과거2개봉낮은수치) and (전환선 < 기준선 or 종가 < 선행스팬A or 종가 < 기준선 or 종가 < 일목윗구름대 or 종가 < 후행스팬)
+// <매도진입>
+//   현재HA저가 < 이전HA저가(과거2개봉낮은수치) and 종가 < 후행스팬 and 종가 < 일목아래구름대 and (전환선 <= 기준선 or 종가 < 기준선)
+// <매도청산>
+//   현재HA고가 > 이전HA고가(과거2개봉높은수치) and (전환선 > 기준선 or 종가 > 선행스팬A or 종가 > 기준선 or 종가 > 일목아래구름대 or 종가 > 후행스팬)
+//#########################################################################################################################################################
+//@version=3
+study("[TVExtBot]HeikinAshi+Ichimoku Indicator", shorttitle="[TVExtBot]HaI", overlay=true)
+
+hahigh = security(heikinashi(tickerid), period, high)
+halow = security(heikinashi(tickerid), period, low)
+
+enableLong = input(title="차트에 롱적용체크", type=bool, defval=true)
+enableShort = input(title=" 차트에 숏적용체크", type=bool, defval=true)
+TenkanSenPeriods = input(9, minval=1, title="전환선")
+KijunSenPeriods = input(26, minval=1, title="기준선")
+SenkouSpan2Periods = input(52, minval=1, title="선행스팬")
+displacement = input(26, minval=1, title="Displacement")
+donchian(len) => avg(lowest(len), highest(len))
+TenkanSen = donchian(TenkanSenPeriods)
+KijunSen = donchian(KijunSenPeriods)
+SenkouSpan1 = avg(TenkanSen, KijunSen)
+SenkouSpan2 = donchian(SenkouSpan2Periods)
+SenkouSpanH = max(SenkouSpan1[displacement - 1], SenkouSpan2[displacement - 1])
+SenkouSpanL = min(SenkouSpan1[displacement - 1], SenkouSpan2[displacement - 1])
+ChikouSpan = close[displacement-1]
+
+plot(TenkanSen, color=blue, title="전환선", linewidth = 2)
+plot(KijunSen, color=maroon, title="기준선", linewidth = 3)
+plot(close, offset = -displacement, color=orange, title="후행스팬", linewidth = 2)
+sa=plot (SenkouSpan1, offset = displacement, color=green,  title="선행스팬1", linewidth = 2)
+sb=plot (SenkouSpan2, offset = displacement, color=red,  title="선행스팬2", linewidth = 3)
+fill(sa, sb, color = SenkouSpan1 > SenkouSpan2 ? green : red)
+
+longCondition = hahigh > max(hahigh[1],hahigh[2]) and close > ChikouSpan and close > SenkouSpanH and (TenkanSen >= KijunSen or close > KijunSen)
+longClose = halow < min(halow[1],halow[2]) and (TenkanSen < KijunSen or close < SenkouSpan1 or close < KijunSen or close < SenkouSpanH or close < ChikouSpan)
+
+long_position_size = 0
+if long_position_size[1] > 0
+    long_position_size := long_position_size[1]
+
+isLongPositionEntry = false
+isLongPositionClose = false
+if longCondition and long_position_size == 0
+    long_position_size := 1
+    isLongPositionEntry := true
+if longClose and long_position_size > 0
+    long_position_size := 0
+    isLongPositionClose := true
+
+shortCondition = halow < min(halow[1],halow[2]) and close < ChikouSpan and close < SenkouSpanL and (TenkanSen <= KijunSen or close < KijunSen)
+shortClose = hahigh > max(hahigh[1],hahigh[2]) and (TenkanSen > KijunSen or close > SenkouSpan1 or close > KijunSen or close > SenkouSpanL or close > ChikouSpan)
+
+short_position_size = 0
+if short_position_size[1] > 0
+    short_position_size := short_position_size[1]
+
+isShortPositionEntry = false
+isShortPositionClose = false
+if shortCondition and short_position_size == 0
+    short_position_size := 1
+    isShortPositionEntry := true
+if shortClose and short_position_size > 0
+    short_position_size := 0
+    isShortPositionClose := true
+
+plotshape(enableLong and isLongPositionEntry, title="Buy", color=green, textcolor=green, transp=0, style=shape.triangleup, location=location.belowbar, size=size.small,text="매수진입",offset=0)
+plotshape(enableLong and isLongPositionClose, title="Buy Close", color=green, textcolor=white, transp=0, style=shape.labeldown, location=location.abovebar, size=size.small,text="매수\n청산",offset=0)
+plotshape(enableShort and isShortPositionEntry, title="Sell", color=red, textcolor=red, transp=0, style=shape.triangledown, location=location.abovebar, size=size.small,text="매도진입",offset=0)
+plotshape(enableShort and isShortPositionClose, title="Sell Close", color=red, textcolor=white, transp=0, style=shape.labelup, location=location.belowbar, size=size.small,text="매도\n청산",offset=0)
+
+alertcondition(isLongPositionEntry, title = "매수진입", message = "메시지설정")
+alertcondition(isLongPositionClose, "매수청산", "메시지설정")
+alertcondition(isShortPositionEntry, title = "매도진입", message = "메시지설정")
+alertcondition(isShortPositionClose, "매도청산", "메시지설정")
