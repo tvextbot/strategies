@@ -1,7 +1,6 @@
 // This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
 // © TVExtBot
 
-
 //@version=5
 strategy(title='현물그리드매매전략', overlay=true,
      initial_capital=1000, commission_type = strategy.commission.percent, commission_value = 0.06, pyramiding = 10, 
@@ -67,9 +66,9 @@ plot(UpperLimit, color = color.purple)
 LowerLimit = UpperLimit * x10
 plot(LowerLimit, color = color.purple)
 
-//--------------------------------------------------------------------------------}
+//-----------------------------------------------------------------------------------------}
 
-//---------------------------------------Lines Setting--------------------------------------{
+//---------------------------------------그리드 라인 설정--------------------------------------{
 
 Linea_A = UpperLimit * x1
 plot(Linea_A, color =  color.blue)
@@ -98,9 +97,9 @@ plot(Linea_G, color =  color.blue)
 Linea_H = UpperLimit * x9
 plot(Linea_H, color =  color.blue)
 
-//--------------------------------------------------------------------------------}
+//----------------------------------------------------------------------------------------}
 
-//---------------------------------------Trades Order Setting--------------------------------------{
+//---------------------------------------매수 주문 설정--------------------------------------{
 
 FloorLimit = close > LowerLimit 
 Cond1 = close < Linea_A
@@ -202,9 +201,9 @@ else
 
 
 
-//--------------------------------------------------------------------------------}
+//----------------------------------------------------------------------------------------}
 
-//---------------------------------------Exit Trades Order Setting--------------------------------------{
+//---------------------------------------매도 주문 설정--------------------------------------{
 
 isExit1 = if (close > UpperLimit and barstate.isconfirmed)
     close
@@ -236,9 +235,9 @@ isExit9 = if (close > Linea_G and barstate.isconfirmed)
 isExit10 = if (close > Linea_H and barstate.isconfirmed)
     close
     
-//--------------------------------------------------------------------------------}
+//----------------------------------------------------------------------------------------}
     
-//---------------------------------------Order Management Setting--------------------------------------{
+//---------------------------------------매수 매도 주문--------------------------------------{
 
 strategy.entry(id = "BUY1",  direction = strategy.long, qty = 10, when = (isLong1 and strategy.position_size == 0), alert_message='TVM:{"orderid":"' + buyOrderid +'","memo":"' + buyMemo + '","token":"' + token + '"}:MVT')
 strategy.entry(id = "BUY2",  direction = strategy.long, qty = 10, when = (isLong2 and strategy.position_size == 10), alert_message='TVM:{"orderid":"' + buyOrderid +'","memo":"' + buyMemo + '","token":"' + token + '"}:MVT')
@@ -263,12 +262,11 @@ strategy.exit(id = "EXIT8",     from_entry = "BUY8",    qty = 100, stop = isExit
 strategy.exit(id = "EXIT9",     from_entry = "BUY9",    qty = 100, stop = isExit9, alert_message='TVM:{"orderid":"' + sellOrderid +'","memo":"' + sellMemo + '","token":"' + token + '"}:MVT')
 strategy.exit(id = "EXIT10",    from_entry = "BUY10",   qty = 100, stop = isExit10, alert_message='TVM:{"orderid":"' + sellOrderid +'","memo":"' + sellMemo + '","token":"' + token + '"}:MVT')
 
-//--------------------------------------------------------------------------------}
+//--------------------------------------------------------------------------------------}
 
-//---------------------------------------Extreme Condition Setting--------------------------------------{
+//---------------------------------------스탑로스 설정--------------------------------------{
 
-ExitConditionOn = input.string("NO", title="사용여부", 
-     options=["NO", "YES"], group = "스탑로스 설정") == "YES"
+ExitConditionOn = input.string("NO", title="사용여부", options=["NO", "YES"], group = "스탑로스 설정") == "YES"
 
 StopLoss = input(0.00, "손절비율(%)", group = "스탑로스 설정")
 
@@ -281,14 +279,14 @@ GridDestroyed = close < StopLossLevel and barstate.isconfirmed
 if ExitConditionOn
     strategy.close_all(when = GridDestroyed, comment = "손절", alert_message='TVM:{"orderid":"' + closeOrderid +'","memo":"' + closeMemo + '","token":"' + token + '"}:MVT')
 
-//--------------------------------------------------------------------------------}
+//--------------------------------------------------------------------------------------------}
 
 
 //---------------------------------------그리드가격 테이블설정--------------------------------------{
 
 i_position = input.string(defval = "Bottom Right", title = "테이블위치", options = ["Top Right", "Middle Right", "Bottom Right"], group = "테이블설정")
 position = i_position == "Top Right" ? position.top_right : i_position == "Middle Right" ? position.middle_right : position.bottom_right
-i_w = 10
+i_w = 12
 i_h = 2
 text_size = size.normal
 
