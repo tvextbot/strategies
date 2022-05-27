@@ -1,7 +1,6 @@
 // This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
 // © TVExtBot
 
-
 //@version=5
 strategy(title='현물그리드매매전략', overlay=true,
      initial_capital=1000, commission_type = strategy.commission.percent, commission_value = 0.06, pyramiding = 10, 
