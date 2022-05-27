@@ -1,0 +1,320 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © TVExtBot
+
+
+//@version=5
+strategy(title='현물그리드매매전략', overlay=true,
+     initial_capital=1000, commission_type = strategy.commission.percent, commission_value = 0.06, pyramiding = 10, 
+     default_qty_value=10, default_qty_type=strategy.percent_of_equity,
+     process_orders_on_close=true, close_entries_rule='ANY')
+
+
+//---------------------------------------백테스트기간 설정--------------------------------------{
+
+// Make input options that configure backtest date range
+startYear = input.int(title="시작 년",
+     defval=2020, minval=1800, maxval=2100, inline="1", group = '백테스트기간')
+startMonth = input.int(title="월",
+     defval=1, minval=1, maxval=12, inline="1", group = '백테스트기간')
+startDate = input.int(title="일",
+     defval=1, minval=1, maxval=31, inline="1", group = '백테스트기간')
+
+endYear = input.int(title="종료 년",
+     defval=2050, minval=1800, maxval=2100, inline="2", group = '백테스트기간')
+endMonth = input.int(title="월",
+     defval=12, minval=1, maxval=12, inline="2", group = '백테스트기간')
+endDate = input.int(title="일",
+     defval=31, minval=1, maxval=31, inline="2", group = '백테스트기간')
+
+// Look if the close time of the current bar
+// Falls inside the date range
+inDateRange = (time >= timestamp(syminfo.timezone, startYear,
+         startMonth, startDate, 0, 0)) and
+     (time < timestamp(syminfo.timezone, endYear, endMonth, endDate, 0, 0))
+
+//--------------------------------------------------------------------------------}
+
+//---------------------------------------주문정보설정--------------------------------------{
+token = input.string(title = "인증키", defval = "", inline="3", group = "주문정보", tooltip = "TVExtBot 인증키")
+buyOrderid = input.string(title = "매수주문ID", defval = "", group = "주문정보",   inline = "4")
+buyMemo = input.string(title = " 메모", defval = "", group = "주문정보", inline = "4")
+sellOrderid = input.string(title = "매도주문ID", defval = "", group = "주문정보",   inline = "5")
+sellMemo = input.string(title = " 메모", defval = "", group = "주문정보", inline = "5")
+closeOrderid = input.string(title = "손절주문ID", defval = "", group = "주문정보",   inline = "6")
+closeMemo = input.string(title = " 메모", defval = "", group = "주문정보", inline = "6")
+
+//---------------------------------------그리드설정--------------------------------------{
+
+PercentProfit = input(0.50, "간격(%)", group = "그리드 간격 설정")
+
+x1 = (100 - (PercentProfit * 1)) / 100
+x2 = (100 - (PercentProfit * 2)) / 100
+x3 = (100 - (PercentProfit * 3)) / 100
+x4 = (100 - (PercentProfit * 4)) / 100
+
+x5 = (100 - (PercentProfit * 5)) / 100
+
+x6 = (100 - (PercentProfit * 6)) / 100
+x7 = (100 - (PercentProfit * 7)) / 100
+x8 = (100 - (PercentProfit * 8)) / 100
+x9 = (100 - (PercentProfit * 9)) / 100
+
+x10 = (100 - (PercentProfit * 10)) / 100
+
+UpperLimit = input.price(0.00, 'Top 그리드 포지션', group = "", confirm=true)
+plot(UpperLimit, color = color.purple)
+
+LowerLimit = UpperLimit * x10
+plot(LowerLimit, color = color.purple)
+
+//--------------------------------------------------------------------------------}
+
+//---------------------------------------Lines Setting--------------------------------------{
+
+Linea_A = UpperLimit * x1
+plot(Linea_A, color =  color.blue)
+
+Linea_B = UpperLimit * x2
+plot(Linea_B, color =  color.blue)
+
+Linea_C = UpperLimit * x3
+plot(Linea_C, color =  color.blue)
+
+Linea_D = UpperLimit * x4
+plot(Linea_D, color =  color.blue)
+
+Linea_50Percent = UpperLimit * x5
+plot(Linea_50Percent, color =  color.purple)
+
+Linea_E = UpperLimit *  x6
+plot(Linea_E, color =  color.blue)
+
+Linea_F = UpperLimit * x7
+plot(Linea_F, color =  color.blue)
+
+Linea_G = UpperLimit  * x8
+plot(Linea_G, color =  color.blue)
+
+Linea_H = UpperLimit * x9
+plot(Linea_H, color =  color.blue)
+
+//--------------------------------------------------------------------------------}
+
+//---------------------------------------Trades Order Setting--------------------------------------{
+
+FloorLimit = close > LowerLimit 
+Cond1 = close < Linea_A
+Cd1 = FloorLimit and Cond1
+LongA = Cd1 and inDateRange
+
+isLong1 = if (LongA and barstate.isconfirmed)
+    1
+else 
+    0 
+
+FloorLimit2 = close > LowerLimit 
+Cond2 = close < Linea_B
+Cd2 = FloorLimit2 and Cond2
+LongB = Cd2 and inDateRange
+
+isLong2 = if (LongB and barstate.isconfirmed)
+    1
+else 
+    0
+
+FloorLimit3 = close > LowerLimit 
+Cond3 = close < Linea_C
+Cd3 = FloorLimit and Cond3
+LongC = Cd3 and inDateRange 
+
+isLong3 = if (LongC and barstate.isconfirmed)
+    1
+else 
+    0
+
+FloorLimit4 = close > LowerLimit 
+Cond4 = close < Linea_D
+Cd4 = FloorLimit and Cond4
+LongD = Cd4 and inDateRange 
+
+isLong4 = if (LongD and barstate.isconfirmed)
+    1
+else 
+    0 
+    
+FloorLimit5 = close > LowerLimit 
+Cond5 = close < Linea_50Percent
+Cd5 = FloorLimit and Cond5
+Long_E = Cd5 and inDateRange 
+
+isLong5 = if (Long_E and barstate.isconfirmed)
+    1
+else 
+    0 
+    
+FloorLimit6 = close > LowerLimit 
+Cond6 = close < Linea_E
+Cd6 = FloorLimit and Cond6
+Long_F = Cd6 and inDateRange 
+
+isLong6 = if (Long_F and barstate.isconfirmed)
+    1
+else 
+    0 
+    
+FloorLimit7 = close > LowerLimit 
+Cond7 = close < Linea_F
+Cd7 = FloorLimit and Cond7
+Long_G = Cd7 and inDateRange 
+
+isLong7 = if (Long_G and barstate.isconfirmed)
+    1
+else 
+    0 
+    
+FloorLimit8 = close > LowerLimit 
+Cond8 = close < Linea_G
+Cd8 = FloorLimit and Cond8
+Long_H = Cd8 and inDateRange 
+
+isLong8 = if (Long_H and barstate.isconfirmed)
+    1
+else 
+    0 
+    
+FloorLimit9 = close > LowerLimit 
+Cond9 = close < Linea_H
+Cd9 = FloorLimit and Cond9
+LongH = Cd9 and inDateRange 
+
+isLong9 = if (Long_H and barstate.isconfirmed)
+    1
+else 
+    0 
+
+Cond10 = close < LowerLimit
+Long_I = Cond10 and inDateRange 
+
+isLong10 = if (Long_I and barstate.isconfirmed)
+    1
+else 
+    0 
+
+
+
+//--------------------------------------------------------------------------------}
+
+//---------------------------------------Exit Trades Order Setting--------------------------------------{
+
+isExit1 = if (close > UpperLimit and barstate.isconfirmed)
+    close
+    
+isExit2 = if (close > Linea_A and barstate.isconfirmed)
+    close
+    
+isExit3 = if (close > Linea_B and barstate.isconfirmed)
+    close
+
+isExit4 = if (close > Linea_C and barstate.isconfirmed)
+    close
+    
+isExit5 = if (close > Linea_D and barstate.isconfirmed)
+    close
+    
+isExit6 = if (close > Linea_50Percent and barstate.isconfirmed)
+    close
+    
+isExit7 = if (close > Linea_E and barstate.isconfirmed)
+    close
+
+isExit8 = if (close > Linea_F and barstate.isconfirmed)
+    close
+    
+isExit9 = if (close > Linea_G and barstate.isconfirmed)
+    close
+
+isExit10 = if (close > Linea_H and barstate.isconfirmed)
+    close
+    
+//--------------------------------------------------------------------------------}
+    
+//---------------------------------------Order Management Setting--------------------------------------{
+
+strategy.entry(id = "BUY1",  direction = strategy.long, qty = 10, when = (isLong1 and strategy.position_size == 0), alert_message='TVM:{"orderid":"' + buyOrderid +'","memo":"' + buyMemo + '","token":"' + token + '"}:MVT')
+strategy.entry(id = "BUY2",  direction = strategy.long, qty = 10, when = (isLong2 and strategy.position_size == 10), alert_message='TVM:{"orderid":"' + buyOrderid +'","memo":"' + buyMemo + '","token":"' + token + '"}:MVT')
+strategy.entry(id = "BUY3",  direction = strategy.long, qty = 10, when = (isLong3 and strategy.position_size == 20), alert_message='TVM:{"orderid":"' + buyOrderid +'","memo":"' + buyMemo + '","token":"' + token + '"}:MVT')
+strategy.entry(id = "BUY4",  direction = strategy.long, qty = 10, when = (isLong4 and strategy.position_size == 30), alert_message='TVM:{"orderid":"' + buyOrderid +'","memo":"' + buyMemo + '","token":"' + token + '"}:MVT')
+strategy.entry(id = "BUY5",  direction = strategy.long, qty = 10, when = (isLong5 and strategy.position_size == 40), alert_message='TVM:{"orderid":"' + buyOrderid +'","memo":"' + buyMemo + '","token":"' + token + '"}:MVT')
+strategy.entry(id = "BUY6",  direction = strategy.long, qty = 10, when = (isLong6 and strategy.position_size == 50), alert_message='TVM:{"orderid":"' + buyOrderid +'","memo":"' + buyMemo + '","token":"' + token + '"}:MVT')
+strategy.entry(id = "BUY7",  direction = strategy.long, qty = 10, when = (isLong7 and strategy.position_size == 60), alert_message='TVM:{"orderid":"' + buyOrderid +'","memo":"' + buyMemo + '","token":"' + token + '"}:MVT')
+strategy.entry(id = "BUY8",  direction = strategy.long, qty = 10, when = (isLong8 and strategy.position_size == 70), alert_message='TVM:{"orderid":"' + buyOrderid +'","memo":"' + buyMemo + '","token":"' + token + '"}:MVT')
+strategy.entry(id = "BUY9",  direction = strategy.long, qty = 10, when = (isLong9 and strategy.position_size == 80), alert_message='TVM:{"orderid":"' + buyOrderid +'","memo":"' + buyMemo + '","token":"' + token + '"}:MVT')
+strategy.entry(id = "BUY10", direction = strategy.long, qty = 10, when = (isLong10 and strategy.position_size == 90), alert_message='TVM:{"orderid":"' + buyOrderid +'","memo":"' + buyMemo + '","token":"' + token + '"}:MVT')
+
+
+strategy.exit(id = "EXIT1",     from_entry = "BUY1",    qty = 100, stop = isExit1, alert_message='TVM:{"orderid":"' + sellOrderid +'","memo":"' + sellMemo + '","token":"' + token + '"}:MVT')
+strategy.exit(id = "EXIT2",     from_entry = "BUY2",    qty = 100, stop = isExit2, alert_message='TVM:{"orderid":"' + sellOrderid +'","memo":"' + sellMemo + '","token":"' + token + '"}:MVT')
+strategy.exit(id = "EXIT3",     from_entry = "BUY3",    qty = 100, stop = isExit3, alert_message='TVM:{"orderid":"' + sellOrderid +'","memo":"' + sellMemo + '","token":"' + token + '"}:MVT')
+strategy.exit(id = "EXIT4",     from_entry = "BUY4",    qty = 100, stop = isExit4, alert_message='TVM:{"orderid":"' + sellOrderid +'","memo":"' + sellMemo + '","token":"' + token + '"}:MVT')
+strategy.exit(id = "EXIT5",     from_entry = "BUY5",    qty = 100, stop = isExit5, alert_message='TVM:{"orderid":"' + sellOrderid +'","memo":"' + sellMemo + '","token":"' + token + '"}:MVT')
+strategy.exit(id = "EXIT6",     from_entry = "BUY6",    qty = 100, stop = isExit6, alert_message='TVM:{"orderid":"' + sellOrderid +'","memo":"' + sellMemo + '","token":"' + token + '"}:MVT')
+strategy.exit(id = "EXIT7",     from_entry = "BUY7",    qty = 100, stop = isExit7, alert_message='TVM:{"orderid":"' + sellOrderid +'","memo":"' + sellMemo + '","token":"' + token + '"}:MVT')
+strategy.exit(id = "EXIT8",     from_entry = "BUY8",    qty = 100, stop = isExit8, alert_message='TVM:{"orderid":"' + sellOrderid +'","memo":"' + sellMemo + '","token":"' + token + '"}:MVT')
+strategy.exit(id = "EXIT9",     from_entry = "BUY9",    qty = 100, stop = isExit9, alert_message='TVM:{"orderid":"' + sellOrderid +'","memo":"' + sellMemo + '","token":"' + token + '"}:MVT')
+strategy.exit(id = "EXIT10",    from_entry = "BUY10",   qty = 100, stop = isExit10, alert_message='TVM:{"orderid":"' + sellOrderid +'","memo":"' + sellMemo + '","token":"' + token + '"}:MVT')
+
+//--------------------------------------------------------------------------------}
+
+//---------------------------------------Extreme Condition Setting--------------------------------------{
+
+ExitConditionOn = input.string("NO", title="사용여부", 
+     options=["NO", "YES"], group = "스탑로스 설정") == "YES"
+
+StopLoss = input(0.00, "손절비율(%)", group = "스탑로스 설정")
+
+x = (100 - StopLoss) / 100
+
+StopLossLevel = LowerLimit * x
+
+GridDestroyed = close < StopLossLevel and barstate.isconfirmed
+
+if ExitConditionOn
+    strategy.close_all(when = GridDestroyed, comment = "손절", alert_message='TVM:{"orderid":"' + closeOrderid +'","memo":"' + closeMemo + '","token":"' + token + '"}:MVT')
+
+//--------------------------------------------------------------------------------}
+
+
+//---------------------------------------그리드가격 테이블설정--------------------------------------{
+
+i_position = input.string(defval = "Bottom Right", title = "테이블위치", options = ["Top Right", "Middle Right", "Bottom Right"], group = "테이블설정")
+position = i_position == "Top Right" ? position.top_right : i_position == "Middle Right" ? position.middle_right : position.bottom_right
+i_w = 10
+i_h = 2
+text_size = size.normal
+
+var table perfTable = table.new(position, 2, 11, frame_color = color.blue, frame_width = 2, border_width = 1)
+
+table.cell(perfTable, 0, 0, "그리드 최고가격", bgcolor = color.new(color.purple, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+table.cell(perfTable, 1, 0, text = str.tostring(UpperLimit), bgcolor = color.new(color.purple, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+table.cell(perfTable, 0, 1,  "그리드가격 1", bgcolor = color.new(color.blue, 74),  text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+table.cell(perfTable, 0, 2, "그리드가격 2", bgcolor = color.new(color.blue, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+table.cell(perfTable, 0, 3, "그리드가격 3", bgcolor = color.new(color.blue, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+table.cell(perfTable, 0, 4, "그리드가격 4", bgcolor = color.new(color.blue, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+table.cell(perfTable, 1, 1, text = str.tostring(Linea_A), bgcolor = color.new(color.blue, 74),  text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+table.cell(perfTable, 1, 2, text = str.tostring(Linea_B), bgcolor = color.new(color.blue, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+table.cell(perfTable, 1, 3, text = str.tostring(Linea_C), bgcolor = color.new(color.blue, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+table.cell(perfTable, 1, 4, text = str.tostring(Linea_D), bgcolor = color.new(color.blue, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+table.cell(perfTable, 0, 5, "그리드 중간가격", bgcolor = color.new(color.purple, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+table.cell(perfTable, 1, 5, text = str.tostring(Linea_50Percent), bgcolor = color.new(color.purple, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+table.cell(perfTable, 0, 6,  "그리드가격 5", bgcolor = color.new(color.blue, 74),  text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+table.cell(perfTable, 0, 7, "그리드가격 6", bgcolor = color.new(color.blue, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+table.cell(perfTable, 0, 8, "그리드가격 7", bgcolor = color.new(color.blue, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+table.cell(perfTable, 0, 9, "그리드가격 8", bgcolor = color.new(color.blue, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+table.cell(perfTable, 1, 6,  text = str.tostring(Linea_E), bgcolor = color.new(color.blue, 74),  text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+table.cell(perfTable, 1, 7, text = str.tostring(Linea_F), bgcolor = color.new(color.blue, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+table.cell(perfTable, 1, 8, text = str.tostring(Linea_G), bgcolor = color.new(color.blue, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+table.cell(perfTable, 1, 9, text = str.tostring(Linea_H), bgcolor = color.new(color.blue, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+table.cell(perfTable, 0, 10, "스탑로스 레벨", bgcolor = color.new(color.purple, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+table.cell(perfTable, 1, 10, text = str.tostring(StopLossLevel), bgcolor = color.new(color.purple, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+
+//--------------------------------------------------------------------------------}
