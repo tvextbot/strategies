@@ -60,7 +60,7 @@ x9 = (100 - (PercentProfit * 9)) / 100
 
 x10 = (100 - (PercentProfit * 10)) / 100
 
-UpperLimit = input.price(0.00, 'Top 그리드 포지션', group = "", confirm=true)
+UpperLimit = input.price(0.00, '상단 그리드 가격', group = "", confirm=true)
 plot(UpperLimit, color = color.purple)
 
 LowerLimit = UpperLimit * x10
@@ -292,7 +292,7 @@ text_size = size.normal
 
 var table perfTable = table.new(position, 2, 11, frame_color = color.blue, frame_width = 2, border_width = 1)
 
-table.cell(perfTable, 0, 0, "그리드 최고가격", bgcolor = color.new(color.purple, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+table.cell(perfTable, 0, 0, "상단 그리드 가격", bgcolor = color.new(color.purple, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
 table.cell(perfTable, 1, 0, text = str.tostring(UpperLimit), bgcolor = color.new(color.purple, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
 table.cell(perfTable, 0, 1,  "그리드가격 1", bgcolor = color.new(color.blue, 74),  text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
 table.cell(perfTable, 0, 2, "그리드가격 2", bgcolor = color.new(color.blue, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
@@ -302,7 +302,7 @@ table.cell(perfTable, 1, 1, text = str.tostring(Linea_A), bgcolor = color.new(co
 table.cell(perfTable, 1, 2, text = str.tostring(Linea_B), bgcolor = color.new(color.blue, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
 table.cell(perfTable, 1, 3, text = str.tostring(Linea_C), bgcolor = color.new(color.blue, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
 table.cell(perfTable, 1, 4, text = str.tostring(Linea_D), bgcolor = color.new(color.blue, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
-table.cell(perfTable, 0, 5, "그리드 중간가격", bgcolor = color.new(color.purple, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+table.cell(perfTable, 0, 5, "중간 그리드 가격", bgcolor = color.new(color.purple, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
 table.cell(perfTable, 1, 5, text = str.tostring(Linea_50Percent), bgcolor = color.new(color.purple, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
 table.cell(perfTable, 0, 6,  "그리드가격 5", bgcolor = color.new(color.blue, 74),  text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
 table.cell(perfTable, 0, 7, "그리드가격 6", bgcolor = color.new(color.blue, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
@@ -312,7 +312,7 @@ table.cell(perfTable, 1, 6,  text = str.tostring(Linea_E), bgcolor = color.new(c
 table.cell(perfTable, 1, 7, text = str.tostring(Linea_F), bgcolor = color.new(color.blue, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
 table.cell(perfTable, 1, 8, text = str.tostring(Linea_G), bgcolor = color.new(color.blue, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
 table.cell(perfTable, 1, 9, text = str.tostring(Linea_H), bgcolor = color.new(color.blue, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
-table.cell(perfTable, 0, 10, "스탑로스 레벨", bgcolor = color.new(color.purple, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
+table.cell(perfTable, 0, 10, "하단 그리드 가격(손절)", bgcolor = color.new(color.purple, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
 table.cell(perfTable, 1, 10, text = str.tostring(StopLossLevel), bgcolor = color.new(color.purple, 74), text_color = color.new(color.white, 0), width = i_w, height = i_h, text_size = text_size)
 
 //--------------------------------------------------------------------------------}
