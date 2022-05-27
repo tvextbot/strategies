@@ -2,7 +2,7 @@
 // © TVExtBot
 
 //@version=5
-strategy(title='현물그리드매매전략', overlay=true,
+strategy(title='그리드현물매매전략', overlay=true,
      initial_capital=1000, commission_type = strategy.commission.percent, commission_value = 0.06, pyramiding = 10, 
      default_qty_value=10, default_qty_type=strategy.percent_of_equity,
      process_orders_on_close=true, close_entries_rule='ANY')
