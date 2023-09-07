@@ -1,81 +1,95 @@
-study(title="Zero Lag MACD free", shorttitle="Zero Lag MACD free")
+//@version=5
+indicator(title='Zero Lag MACD free', shorttitle='Zero Lag MACD free')
 src10 = input(close)
-OverBought = input(70, minval=0)
-OverSold = input(20, maxval=100)
+OverBought = input.int(70, minval=0)
+OverSold = input.int(20, maxval=100)
 smooth = input(5)
 
 Length = input(21)
 NormalizeRange = input(true)
 
 normalize(series) =>
-    h = highest(series, Length)
-    l = lowest(series, Length)
-    res = (series - l)/(h - l)
-    
-len = input(5, minval=1)
-ma3 = wma(src10*volume, len) / wma(volume, len)
+    h = ta.highest(series, Length)
+    l = ta.lowest(series, Length)
+    res = (series - l) / (h - l)
+    res
 
-result1 = NormalizeRange ? normalize(ma3) : (ma3 / sma(ma3, Length))
+len = input.int(5, minval=1)
+ma3 = ta.wma(src10 * volume, len) / ta.wma(volume, len)
 
-m1 = sma(result1, smooth)
-m2 = sma(result1*100, smooth)
+normalize__1 = normalize(ma3)
+sma_1 = ta.sma(ma3, Length)
+result1 = NormalizeRange ? normalize__1 : ma3 / sma_1
+
+m1 = ta.sma(result1, smooth)
+m2 = ta.sma(result1 * 100, smooth)
 
 
 
 source = close
 
-fastLength = input(12, title="Fast MM period", minval=1)
-slowLength = input(26,title="Slow MM period",  minval=1)
-signalLength =input(9,title="Signal MM period",  minval=1)
-MacdEmaLength =input(9, title="MACD EMA period", minval=1)
-useEma = input(true, title="Use EMA (otherwise SMA)")
-useOldAlgo = input(false, title="Use Glaz algo (otherwise 'real' original zero lag)")
-showDots = input(true, title="Show symbols to indicate crossing")
-dotsDistance = input(1.5, title="Symbols distance factor", minval=0.1)
+fastLength = input.int(12, title='Fast MM period', minval=1)
+slowLength = input.int(26, title='Slow MM period', minval=1)
+signalLength = input.int(9, title='Signal MM period', minval=1)
+MacdEmaLength = input.int(9, title='MACD EMA period', minval=1)
+useEma = input(true, title='Use EMA (otherwise SMA)')
+useOldAlgo = input(false, title='Use Glaz algo (otherwise \'real\' original zero lag)')
+showDots = input(true, title='Show symbols to indicate crossing')
+dotsDistance = input.float(1.5, title='Symbols distance factor', minval=0.1)
 
 // Fast line
-ma1= useEma ? ema(source, fastLength) : sma(source, fastLength) 
-ma2 = useEma ?  ema(ma1,fastLength) :  sma(ma1,fastLength) 
-zerolagEMA = ((2 * ma1) - ma2)
+ema_1 = ta.ema(source, fastLength)
+sma_2 = ta.sma(source, fastLength)
+ma1 = useEma ? ema_1 : sma_2
+ema_2 = ta.ema(ma1, fastLength)
+sma_3 = ta.sma(ma1, fastLength)
+ma2 = useEma ? ema_2 : sma_3
+zerolagEMA = 2 * ma1 - ma2
 
 // Slow line
-mas1=  useEma ? ema(source , slowLength) :  sma(source , slowLength)
-mas2 =  useEma ? ema(mas1 , slowLength): sma(mas1 , slowLength)
-zerolagslowMA = ((2 * mas1) - mas2)
+ema_3 = ta.ema(source, slowLength)
+sma_4 = ta.sma(source, slowLength)
+mas1 = useEma ? ema_3 : sma_4
+ema_4 = ta.ema(mas1, slowLength)
+sma_5 = ta.sma(mas1, slowLength)
+mas2 = useEma ? ema_4 : sma_5
+zerolagslowMA = 2 * mas1 - mas2
 
 // MACD line
-ZeroLagMACD = zerolagEMA - zerolagslowMA 
+ZeroLagMACD = zerolagEMA - zerolagslowMA
 
 // Signal line
-emasig1 = ema(ZeroLagMACD, signalLength)
-emasig2 = ema(emasig1, signalLength)
-signal = useOldAlgo ? sma(ZeroLagMACD, signalLength) : (2 * emasig1) - emasig2
+emasig1 = ta.ema(ZeroLagMACD, signalLength)
+emasig2 = ta.ema(emasig1, signalLength)
+sma_6 = ta.sma(ZeroLagMACD, signalLength)
+signal = useOldAlgo ? sma_6 : 2 * emasig1 - emasig2
 
 hist = ZeroLagMACD - signal
 
-upHist =(hist > 0) ? hist : 0 
-downHist = (hist <= 0) ? hist : 0
+upHist = hist > 0 ? hist : 0
+downHist = hist <= 0 ? hist : 0
 
-p1 = plot( upHist, color=green, transp=40, style=columns, title='Positive delta')
-p2 = plot( downHist, color=purple, transp=40, style=columns, title='Negative delta') 
+p1 = plot(upHist, color=color.new(color.green, 40), style=plot.style_columns, title='Positive delta')
+p2 = plot(downHist, color=color.new(color.purple, 40), style=plot.style_columns, title='Negative delta')
 
-zeroLine = plot(ZeroLagMACD, color=black, transp=0, linewidth=2, title='MACD line')
-signalLine = plot(signal, color=gray, transp=0, linewidth=2, title='Signal')
+zeroLine = plot(ZeroLagMACD, color=color.new(color.black, 0), linewidth=2, title='MACD line')
+signalLine = plot(signal, color=color.new(color.gray, 0), linewidth=2, title='Signal')
 
-ribbonDiff = hist > 0 ? green : purple
-fill(zeroLine, signalLine, color=ribbonDiff)
+ribbonDiff = hist > 0 ? color.new(color.green, 90) : color.new(color.purple, 90)
+fill(zeroLine, signalLine, color=ribbonDiff2)
 
-circleYPosition = signal*dotsDistance 
-plot(ema(ZeroLagMACD,MacdEmaLength) , color=red, transp=0, linewidth=2, title='EMA on MACD line')
+circleYPosition = signal * dotsDistance
+plot(ta.ema(ZeroLagMACD, MacdEmaLength), color=color.new(color.red, 0), linewidth=2, title='EMA on MACD line')
 
-ribbonDiff2 = hist > 0 ? green : purple
-plot(showDots and m2<OverSold and crossover(ZeroLagMACD, signal) ? circleYPosition : na,style=circles, linewidth=4, color=ribbonDiff2, title='Dots')
-plot(showDots and m2>OverBought and crossunder(ZeroLagMACD, signal) ? circleYPosition : na,style=circles, linewidth=4, color=ribbonDiff2, title='Dots')
-crossUp=showDots and m2<OverSold and crossover(ZeroLagMACD, signal) ? circleYPosition : na
-crossDown=showDots and m2>OverBought and crossunder(ZeroLagMACD, signal) ? circleYPosition : na
-plotchar(crossUp, title="crossUp", char='B', location=location.bottom, color=green, transp=0, offset=0)
-plotchar(crossDown, title="crossDown",char='S', offset=0, location=location.top, color=red, transp=0)
+ribbonDiff2 = hist > 0 ? color.green : color.purple
+plot(showDots and m2 < OverSold and ta.crossover(ZeroLagMACD, signal) ? circleYPosition : na, style=plot.style_circles, linewidth=4, color=ribbonDiff2, title='Dots')
+plot(showDots and m2 > OverBought and ta.crossunder(ZeroLagMACD, signal) ? circleYPosition : na, style=plot.style_circles, linewidth=4, color=ribbonDiff2, title='Dots')
+crossUp = showDots and m2 < OverSold and ta.crossover(ZeroLagMACD, signal) ? circleYPosition : na
+crossDown = showDots and m2 > OverBought and ta.crossunder(ZeroLagMACD, signal) ? circleYPosition : na
+plotchar(crossUp, title='crossUp', char='B', location=location.bottom, color=color.new(color.green, 0), offset=0)
+plotchar(crossDown, title='crossDown', char='S', offset=0, location=location.top, color=color.new(color.red, 0))
 
 
 alertcondition(crossUp, title='crossUp', message='go long')
 alertcondition(crossDown, title='crossDown', message='go short')
+
