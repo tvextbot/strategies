@@ -1,0 +1,27 @@
+//@version=5
+//@strategy_alert_message {{strategy.order.alert_message}}
+strategy("슈퍼트렌드 전략", overlay=true)
+
+atrPeriod = input(10, "ATR Length")
+factor = input.float(3.0, "Factor", step = 0.01)
+long_tp_percent = input.float(10, '롱익절(%)') * 0.01
+short_tp_percent = input.float(10, '숏익절(%)') * 0.01
+
+[supertrend, direction] = ta.supertrend(factor, atrPeriod)
+
+bodyMiddle = plot((open + close) / 2, display=display.none)
+upTrend = plot(direction < 0 ? supertrend : na, "Up Trend", color = color.green, style=plot.style_linebr)
+downTrend = plot(direction < 0? na : supertrend, "Down Trend", color = color.red, style=plot.style_linebr)
+
+fill(bodyMiddle, upTrend, color.new(color.green, 90), fillgaps=false)
+fill(bodyMiddle, downTrend, color.new(color.red, 90), fillgaps=false)
+
+if ta.change(direction) < 0
+    strategy.entry('롱', strategy.long, alert_message = '롱주문메시지 설정')
+    tp = close + (close * long_tp_percent)
+    strategy.exit('롱익절', from_entry = '롱', limit = tp, alert_message = '롱익절 주문메시지 설정')
+
+if ta.change(direction) > 0
+    strategy.entry('숏', strategy.short, alert_message = '숏주문메시지 설정')
+    tp = close - (close * short_tp_percent)
+    strategy.exit('숏익절', from_entry = '숏', limit = tp, alert_message = '숏익절 주문메시지 설정')
