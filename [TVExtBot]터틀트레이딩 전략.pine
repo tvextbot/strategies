@@ -1,0 +1,58 @@
+//@version=6
+// 출처: TVExtBot 블로그 「전설의 전략 실험실」 https://blog.naver.com/tvextbot
+// 전설의 전략 실험실 #1 — 터틀 트레이딩 (단순화 버전)
+// 원조 규칙: N일 최고가 돌파 시 진입, M일 반대 돌파 또는 2N 손절 시 청산, 1회 위험 = 자본의 1%
+// 단순화한 점: 추가 매수(피라미딩)와 「직전 돌파가 이익이면 건너뛰기」 규칙은 넣지 않았습니다.
+strategy("전설의 전략 실험실 #1 터틀 트레이딩", overlay = true,
+     initial_capital = 10000, currency = currency.USD,
+     commission_type = strategy.commission.percent, commission_value = 0.05,
+     slippage = 2, pyramiding = 0)
+
+entryLen = input.int(20, "진입 돌파 기간(일)", minval = 5, maxval = 100, step = 5)
+exitLen  = input.int(10, "청산 돌파 기간(일)", minval = 5, maxval = 60, step = 5)
+atrLen   = input.int(20, "N(ATR) 기간", minval = 5, maxval = 50, step = 5)
+stopN    = input.float(2.0, "손절 폭(N의 몇 배)", minval = 0.5, maxval = 5.0, step = 0.5)
+riskPct  = input.float(1.0, "1회 위험(자본의 %)", minval = 0.1, maxval = 5.0, step = 0.1)
+useShort = input.bool(true, "숏(하락 돌파)도 하기")
+startT   = input.time(timestamp("01 Jan 2020 00:00 +0000"), "백테스트 시작일")
+
+N = ta.atr(atrLen)
+
+// 다음 봉에서 쓸 돌파 기준선 (현재 봉까지의 최고가·최저가 → 다음 봉에 역지정가 주문)
+upEntry = ta.highest(high, entryLen)
+dnEntry = ta.lowest(low, entryLen)
+upExit  = ta.highest(high, exitLen)
+dnExit  = ta.lowest(low, exitLen)
+
+// 수량: 1N 움직이면 자본의 riskPct%만큼 손익 (레버리지 없이 자본 한도까지)
+rawQty = N > 0 ? (strategy.equity * riskPct / 100) / (N * syminfo.pointvalue) : na
+qty    = math.min(rawQty, strategy.equity * 0.95 / close)
+
+// 진입할 때의 N을 기억해 손절에 사용
+var float entryN = na
+if strategy.position_size != 0 and strategy.position_size[1] == 0
+    entryN := N
+if strategy.position_size == 0
+    entryN := na
+nStop = na(entryN) ? N : entryN
+
+inRange = time >= startT
+
+if strategy.position_size == 0
+    if inRange and not na(qty) and qty > 0
+        strategy.entry("Long", strategy.long, qty = qty, stop = upEntry)
+        if useShort
+            strategy.entry("Short", strategy.short, qty = qty, stop = dnEntry)
+else
+    strategy.cancel("Long")
+    strategy.cancel("Short")
+
+if strategy.position_size > 0
+    strategy.exit("Long Exit", "Long", stop = math.max(dnExit, strategy.position_avg_price - stopN * nStop))
+if strategy.position_size < 0
+    strategy.exit("Short Exit", "Short", stop = math.min(upExit, strategy.position_avg_price + stopN * nStop))
+
+plot(upEntry, "진입선(위)", color = color.new(color.teal, 0), linewidth = 2)
+plot(dnEntry, "진입선(아래)", color = color.new(color.orange, 0), linewidth = 2)
+plot(upExit, "청산선(위)", color = color.new(color.orange, 70))
+plot(dnExit, "청산선(아래)", color = color.new(color.teal, 70))
