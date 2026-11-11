@@ -1,0 +1,44 @@
+//@version=6
+// 출처: TVExtBot 블로그 「전설의 전략 실험실」 https://blog.naver.com/tvextbot
+// 전설의 전략 실험실 #2 — 돈치안 4주 규칙 (Four-Week Rule)
+// 원조 규칙: 최근 4주 최고가를 뚫으면 사고, 4주 최저가를 깨면 팔고 숏으로 뒤집는다. 항상 시장에 들어가 있다.
+// 1950~60년대 주식·선물 시장의 4주 = 거래일 20일. 비트코인은 주말에도 거래하므로 4주 = 일봉 28개.
+// 손절·수량 조절 없음: 매번 자본의 일정 비율(기본 100%, 레버리지 없음)로 들어간다.
+// margin_long/short = 0: 자본 100%로 들어갈 때 수수료 몇 달러 차이로 생기는 가짜 「마진 콜」 부분 청산을 끈다.
+strategy("전설의 전략 실험실 #2 돈치안 4주 규칙", overlay = true,
+     initial_capital = 10000, currency = currency.USD,
+     default_qty_type = strategy.percent_of_equity, default_qty_value = 100,
+     margin_long = 0, margin_short = 0,
+     commission_type = strategy.commission.percent, commission_value = 0.05,
+     slippage = 2, pyramiding = 0)
+
+chLen    = input.int(28, "채널 기간(봉) — 4주: 비트코인 28, 주식 20", minval = 5, maxval = 120, step = 1)
+useShort = input.bool(true, "숏으로 뒤집기(끄면 롱만, 4주 최저가에서 정리)")
+startT   = input.time(timestamp("01 Jan 2020 00:00 +0000"), "백테스트 시작일")
+
+// 돈치안 채널: 현재 봉까지의 최고가·최저가 → 다음 봉에서 뚫으면 역지정가 체결
+upper = ta.highest(high, chLen)
+lower = ta.lowest(low, chLen)
+mid   = math.avg(upper, lower)
+
+// 채널이 다 차기 전(차트 첫 28봉)에는 기준선이 na다. stop = na면 시장가 주문이 되어 매일 뒤집히므로 기다린다.
+inRange = time >= startT and not na(upper) and not na(lower)
+pos = strategy.position_size
+
+if inRange
+    if useShort
+        // 항상 시장에 있는 「뒤집기」: 롱이면 숏 주문만, 숏이면 롱 주문만 걸어 둔다
+        if pos <= 0
+            strategy.entry("Long", strategy.long, stop = upper)
+        if pos >= 0
+            strategy.entry("Short", strategy.short, stop = lower)
+    else
+        if pos == 0
+            strategy.entry("Long", strategy.long, stop = upper)
+        else
+            strategy.exit("Long Exit", "Long", stop = lower)
+
+pU = plot(upper, "4주 최고가", color = color.new(color.teal, 0), linewidth = 2)
+pL = plot(lower, "4주 최저가", color = color.new(color.orange, 0), linewidth = 2)
+plot(mid, "가운데", color = color.new(color.gray, 50))
+fill(pU, pL, color = color.new(color.blue, 92))
